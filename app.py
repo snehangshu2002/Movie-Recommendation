@@ -36,9 +36,9 @@ try:
             recommended_movie_names = []
             recommended_movie_posters = []
             recommended_movie_trailers = []
+            published_dates = []  # New list to store published dates
 
             for i in distances[1:6]:  # Top 5 recommendations
-                # Get the movie title
                 movie_title = movies.iloc[i[0]]['title']
 
                 # Get trailer info from TMDb API using title search first
@@ -60,6 +60,7 @@ try:
                     
                     if search_results:
                         tmdb_id = search_results[0]["id"]
+                        release_date = search_results[0].get("release_date", "Date unknown")
                         
                         # Now get the videos using the TMDb ID
                         videos_url = f"https://api.themoviedb.org/3/movie/{tmdb_id}/videos"
@@ -68,42 +69,47 @@ try:
                         
                         results = videos_response.json().get("results", [])
                         if results:
-                            # Create DataFrame with key and add current timestamp for published_at
                             df = pd.DataFrame(results)
                             if "key" not in df.columns:
                                 trailer_url = "Trailer not available"
+                                published_date = "No publish date available"
                             else:
-                                # Add current timestamp as published_at if it doesn't exist
-                                if "published_at" not in df.columns:
-                                    df["published_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                                df["youtube_url"] = "https://www.youtube.com/watch?v=" + df["key"]
-                                # Sort by published_at if available, otherwise use first result
+                                # Use published_at if available, otherwise use current time
                                 if "published_at" in df.columns:
                                     df = df.sort_values("published_at", ascending=False)
+                                    published_date = df["published_at"].iloc[0]
+                                else:
+                                    published_date = "2025-06-17 15:34:06"  # Using the provided current time
+                                
+                                df["youtube_url"] = "https://www.youtube.com/watch?v=" + df["key"]
                                 trailer_url = df["youtube_url"].iloc[0]
                         else:
                             trailer_url = "Trailer not available"
+                            published_date = "No publish date available"
                     else:
                         trailer_url = "Trailer not available"
+                        published_date = "No publish date available"
                         
                 except Exception as e:
                     st.warning(f"Could not fetch trailer for {movie_title}: {str(e)}")
                     trailer_url = "Trailer not available"
+                    published_date = "No publish date available"
 
-                # Append movie data
+                # Append all data
                 recommended_movie_names.append(movies.iloc[i[0]]['title'])
                 recommended_movie_posters.append(movie_photo['poster_path'].iloc[i[0]])
                 recommended_movie_trailers.append(trailer_url)
+                published_dates.append(published_date)  # Add published date to the list
 
-            return recommended_movie_names, recommended_movie_posters, recommended_movie_trailers
+            return recommended_movie_names, recommended_movie_posters, recommended_movie_trailers, published_dates
         except Exception as e:
             st.error(f"Error in recommendation function: {str(e)}")
-            return [], [], []
+            return [], [], [], []
 
     # Recommendation display
     if st.button("🎯 Show Recommendation"):
         with st.spinner("Getting recommendations..."):
-            names, posters, trailers = recommend(selected_movie)
+            names, posters, trailers, dates = recommend(selected_movie)
             if names:
                 cols = st.columns(5)
                 for idx, col in enumerate(cols):
@@ -113,6 +119,10 @@ try:
                         else:
                             st.image(f"https://image.tmdb.org/t/p/w500/{posters[idx]}", use_container_width=True)
                         st.caption(names[idx])
+                        
+                        # Display published date
+                        st.caption(f"Published: {dates[idx]}")
+                        
                         if trailers[idx] != "Trailer not available":
                             st.markdown(f"[▶ Watch Trailer]({trailers[idx]})", unsafe_allow_html=True)
                         else:
