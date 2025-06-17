@@ -28,6 +28,11 @@ This project leverages the TMDB API to collect data on top-rated movies, includi
 - Outputs movie titles and poster URLs for a visual recommendation experience.
 - Saves processed data and similarity matrix for efficient reuse.
 
+## Demo
+Try out the movie recommendation system live on the Streamlit app:  
+[Movie Recommendation App](https://movie-recommendation2002.streamlit.app/)
+
+
 ## Installation
 1. Clone the repository:
    ```bash
