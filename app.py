@@ -2,6 +2,7 @@ import pickle
 import streamlit as st
 import requests
 import pandas as pd
+from datetime import datetime
 
 # Page configuration
 st.set_page_config(page_title="Movie Recommender", layout="wide")
@@ -37,7 +38,7 @@ try:
             recommended_movie_trailers = []
 
             for i in distances[1:6]:  # Top 5 recommendations
-                # Get the movie title instead of ID since we don't have movie_id
+                # Get the movie title
                 movie_title = movies.iloc[i[0]]['title']
 
                 # Get trailer info from TMDb API using title search first
@@ -67,9 +68,19 @@ try:
                         
                         results = videos_response.json().get("results", [])
                         if results:
-                            df = pd.DataFrame(results)[["key", "published_at"]]
-                            df["youtube_url"] = "https://www.youtube.com/watch?v=" + df["key"]
-                            trailer_url = df.sort_values("published_at", ascending=False)["youtube_url"].iloc[0]
+                            # Create DataFrame with key and add current timestamp for published_at
+                            df = pd.DataFrame(results)
+                            if "key" not in df.columns:
+                                trailer_url = "Trailer not available"
+                            else:
+                                # Add current timestamp as published_at if it doesn't exist
+                                if "published_at" not in df.columns:
+                                    df["published_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                                df["youtube_url"] = "https://www.youtube.com/watch?v=" + df["key"]
+                                # Sort by published_at if available, otherwise use first result
+                                if "published_at" in df.columns:
+                                    df = df.sort_values("published_at", ascending=False)
+                                trailer_url = df["youtube_url"].iloc[0]
                         else:
                             trailer_url = "Trailer not available"
                     else:
