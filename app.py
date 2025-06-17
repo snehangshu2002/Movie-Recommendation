@@ -45,18 +45,9 @@ def recommend(movie):
         }
 
         response = requests.get(url, headers=headers)
-
-        # Process trailer data
-        if response.status_code == 200:
-            results = response.json().get("results", [])
-            if results:
-                df = pd.DataFrame(results)[["key", "published_at"]]
-                df["youtube_url"] = "https://www.youtube.com/watch?v=" + df["key"]
-                trailer_url = df.sort_values("published_at", ascending=False)["youtube_url"].iloc[0]
-            else:
-                trailer_url = "Trailer not available"
-        else:
-            trailer_url = "Trailer not available"
+        df = pd.DataFrame(response.json()["results"])[["key","published_at"]]
+        df["youtube_url"] = "https://www.youtube.com/watch?v=" + df["key"]
+        trailer_url = df.sort_values("published_at", ascending=False)["youtube_url"].iloc[0]
 
         # Append movie data
         recommended_movie_names.append(movie_photo['title'][i[0]])
