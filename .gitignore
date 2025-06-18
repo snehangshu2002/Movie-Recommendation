@@ -1,0 +1,11 @@
+# Ignore common model file types
+*.pkl
+*.h5
+*.joblib
+*.pt
+*.sav
+*.model
+
+# Ignore entire model folders (optional)
+models/
+checkpoints/
