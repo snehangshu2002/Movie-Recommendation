@@ -5,6 +5,7 @@
 *.pt
 *.sav
 *.model
+similarity.pkl
 
 # Ignore entire model folders (optional)
 models/
